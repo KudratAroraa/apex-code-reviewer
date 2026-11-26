@@ -1,0 +1,17 @@
+[
+  {
+    "run": 1,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "7/8",
+    "hidden_issues": "5/5",
+    "false_positives": 1,
+    "decoys_wrongly_confirmed": "0/1",
+    "clean_file_findings": 0,
+    "turns": 12,
+    "seconds": 82,
+    "api_equivalent_usd": "0.02",
+    "missed": "TerritoryAssignmentBatch.cls hardcoded-id",
+    "extras": "LegacyInvoiceImporter.cls:57 empty-catch"
+  }
+]

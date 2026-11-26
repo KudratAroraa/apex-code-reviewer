@@ -1,0 +1,156 @@
+{
+  "seconds": 72,
+  "meta": {
+    "num_turns": 22,
+    "total_cost_usd": 0.02039948,
+    "model": "claude-haiku-5-5",
+    "is_error": false,
+    "subtype": "success"
+  },
+  "report": {
+    "reviewed_path": "force-app",
+    "files_reviewed": 8,
+    "findings": [
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 9,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Opportunity query is inside the loop over accounts, so it runs once per account. A batch of 100 or more accounts exceeds the 100 SOQL queries per transaction limit.",
+        "fix": "Query the closed Opportunities for all accounts once, before the loop, using an aggregate query grouped by AccountId, then look up each account's total in a map."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 19,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "update acc runs once per account. A batch of 151 or more accounts exceeds the 150 DML statements limit.",
+        "fix": "Set the ratings in the loop, collect the accounts, and run one update on the list after the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/CaseEscalationService.cls",
+        "line": 10,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "countOpenCases(acc.Id) is called once per account in the loop, and it runs a COUNT query on Case (line 19). The scanner missed this because the query is in a helper method. A batch of 100 or more accounts exceeds the SOQL limit.",
+        "fix": "Count open cases for all accounts in one grouped query before the loop, store the counts in a map, and remove the per-account query from the helper."
+      },
+      {
+        "file": "force-app/main/default/classes/ContactSearchController.cls",
+        "line": 14,
+        "rule_id": "soql-injection",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "searchTerm is concatenated into the query text. A user can type a quote character and add clauses to the query. WITH USER_MODE limits field and object access, but it does not stop injected clauses from changing the WHERE logic.",
+        "fix": "Use a static query with a bind variable: build the LIKE pattern in a String, then write WHERE LastName LIKE :pattern in the query. Remove Database.query."
+      },
+      {
+        "file": "force-app/main/default/classes/InvoiceSyncService.cls",
+        "line": 19,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "Database.update(inv, false) runs once per invoice. The false flag allows partial success but does not reduce the number of DML statements, so a batch of 151 or more invoices exceeds the 150 DML limit.",
+        "fix": "Set the fields on each invoice in the loop, add the invoices to a list, and make one Database.update(list, false) call after the loop. Check the returned SaveResult list for failures."
+      },
+      {
+        "file": "force-app/main/default/triggers/OpportunityTrigger.trigger",
+        "line": 6,
+        "rule_id": "trigger-not-bulkified",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "Trigger.new[0] reads only the first record in the batch. Every other Opportunity in the batch keeps its record type unchanged, so the rule is applied to one record out of up to 200.",
+        "fix": "Loop over Trigger.new and apply the Amount check and the record type assignment to each Opportunity."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 5,
+        "rule_id": "missing-sharing",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The class has no sharing keyword, so record sharing rules are not explicitly enforced. getTopAccounts can return accounts the calling user is not allowed to see.",
+        "fix": "Declare the class as public with sharing class AccountService. Check callers first, because changing the sharing mode can change which records they see."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 9,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Opportunity query runs in system mode and ignores the running user's object and field permissions.",
+        "fix": "Add WITH USER_MODE to the query (it is part of the aggregate query in the fix for line 9 above)."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 25,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Account query runs in system mode and returns fields the running user may not be allowed to read.",
+        "fix": "Add WITH USER_MODE before LIMIT: [SELECT Id, Name, AnnualRevenue FROM Account WITH USER_MODE ORDER BY AnnualRevenue DESC LIMIT :howMany]."
+      },
+      {
+        "file": "force-app/main/default/classes/InvoiceSyncService.cls",
+        "line": 7,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The queue ID 00G5g000004XyZaEAK is specific to one org. In any other org (sandbox, scratch org, or production) it points to no queue or to the wrong one, and invoices are assigned incorrectly.",
+        "fix": "Look up the queue by DeveloperName once, outside the loop: Id financeQueueId = [SELECT Id FROM Group WHERE Type = 'Queue' AND DeveloperName = 'Finance' LIMIT 1].Id; Replace 'Finance' with the real queue API name, or store the name in Custom Metadata."
+      },
+      {
+        "file": "force-app/main/default/triggers/OpportunityTrigger.trigger",
+        "line": 8,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The record type ID 0125g000000ABCDAAA is specific to one org. Record type IDs differ between orgs, so the trigger sets the wrong record type or fails in other environments.",
+        "fix": "Get the ID by developer name once per transaction: Id partnerRecordTypeId = Schema.SObjectType.Opportunity.getRecordTypeInfosByDeveloperName().get('Partner').getRecordTypeId(); Replace 'Partner' with the real developer name."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 21,
+        "rule_id": "debug-statement",
+        "severity": "low",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "System.debug is left in production code. It adds log noise and can expose record counts in debug logs.",
+        "fix": "Remove the System.debug line."
+      },
+      {
+        "file": "force-app/main/default/classes/ContactSearchController.cls",
+        "line": 15,
+        "rule_id": "empty-catch",
+        "severity": "low",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The QueryException is caught and ignored. The user gets no message when the search fails, and results keeps the value from the previous search.",
+        "fix": "Show an error message with ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Search failed. Try a different name.')) and reset results to an empty list."
+      }
+    ],
+    "notes": [
+      "AccountService.updateRatings saves with system-mode update acc. Decide whether the save should run as the user (update as user). This is not a rule finding.",
+      "AccountService.getTopAccounts: a null howMany makes the LIMIT clause fail at runtime. Validate the input or give it a default.",
+      "InvoiceSyncService.syncPaidInvoices discards the Database.update SaveResult list. Invoices that fail to save are silently skipped and no error is logged. No rule covers this; handle the results after the bulk update.",
+      "ContactSearchController.search: a blank searchTerm produces the pattern '%null%' or '%%' in the query, so the search returns unexpected results. Validate the input before querying.",
+      "Test coverage: force-app contains one test class (AccountServiceTest.cls). The other six non-test classes and triggers have no test class in this folder. Production deployment needs at least 75% org-wide Apex test coverage, so the deploy will probably fail unless tests exist elsewhere. This review cannot measure coverage.",
+      "AccountServiceTest.cls is a test class. It was scanned (no findings) but not read in full, because test classes are excluded from the rules.",
+      "LeadConversionService.cls and ContactTrigger.trigger were read in full and have no findings. They match the expected pattern for the codebase.",
+      "OpportunityTrigger.trigger puts its logic directly in the trigger body. A handler class is easier to test and extend. This is a design suggestion, not a rule finding."
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "description": "Hard sample set. Longer files, problems mixed in with normal code, 4 problems the rules cannot see (helpers called from loops, a handler that reads only the first record) and 2 scanner false alarms that should be dismissed after reading the context. Lines list every acceptable line for a finding: for issues inside a helper, either the call inside the loop or the statement in the helper. Version 2 of this key: after the first eval round, two findings Claude reported were confirmed as real problems that the first version of the key missed (escapeSingleQuotes does not protect a table name, and a dynamic query without AccessLevel.USER_MODE runs in system mode). 'acceptable' findings are debatable and count neither as found nor as false positives. Version 3: the soql-without-user-mode rule now also covers dynamic Database.query calls and accepts an explicit WITH SYSTEM_MODE, so the ProductCatalogController query is now a scanner finding and the LegacyInvoiceImporter SYSTEM_MODE query is no longer flagged.",
+  "issues": [
+    {
+      "file": "classes/OrderFulfilmentService.cls",
+      "rule_id": "soql-in-loop",
+      "lines": [
+        80
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/OrderFulfilmentService.cls",
+      "rule_id": "dml-in-loop",
+      "lines": [
+        87
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/ProductCatalogController.cls",
+      "rule_id": "soql-injection",
+      "lines": [
+        14,
+        17
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/ProductCatalogController.cls",
+      "rule_id": "soql-without-user-mode",
+      "lines": [
+        33
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/TerritoryAssignmentBatch.cls",
+      "rule_id": "hardcoded-id",
+      "lines": [
+        10
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/TerritoryAssignmentBatch.cls",
+      "rule_id": "hardcoded-id",
+      "lines": [
+        11
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/TerritoryAssignmentBatch.cls",
+      "rule_id": "debug-statement",
+      "lines": [
+        30
+      ],
+      "found_by": "scanner"
+    },
+    {
+      "file": "classes/OrderFulfilmentService.cls",
+      "rule_id": "soql-in-loop",
+      "lines": [
+        37,
+        51,
+        59,
+        60,
+        61
+      ],
+      "found_by": "review"
+    },
+    {
+      "file": "classes/OrderFulfilmentService.cls",
+      "rule_id": "dml-in-loop",
+      "lines": [
+        37,
+        51,
+        70
+      ],
+      "found_by": "review"
+    },
+    {
+      "file": "classes/TerritoryAssignmentBatch.cls",
+      "rule_id": "dml-in-loop",
+      "lines": [
+        24,
+        44
+      ],
+      "found_by": "review"
+    },
+    {
+      "file": "classes/QuoteTriggerHandler.cls",
+      "rule_id": "trigger-not-bulkified",
+      "lines": [
+        10
+      ],
+      "found_by": "review"
+    },
+    {
+      "file": "classes/LegacyInvoiceImporter.cls",
+      "rule_id": "soql-injection",
+      "lines": [
+        53,
+        54,
+        56
+      ],
+      "found_by": "review"
+    },
+    {
+      "file": "classes/ProductCatalogController.cls",
+      "rule_id": "soql-without-user-mode",
+      "lines": [
+        17
+      ],
+      "found_by": "scanner"
+    }
+  ],
+  "decoys": [
+    {
+      "file": "classes/LegacyInvoiceImporter.cls",
+      "rule_id": "hardcoded-id",
+      "lines": [
+        11
+      ],
+      "reason": "Legacy finance reference number, documented in a comment, not a Salesforce ID"
+    }
+  ],
+  "clean_files": [
+    "triggers/QuoteTrigger.trigger"
+  ],
+  "acceptable": [
+    {
+      "file": "classes/TerritoryAssignmentBatch.cls",
+      "rule_id": "soql-without-user-mode",
+      "lines": [
+        14,
+        15,
+        16,
+        17
+      ],
+      "reason": "Batch start query runs in system mode, which is often intended for scheduled jobs"
+    }
+  ]
+}

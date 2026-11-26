@@ -1,0 +1,154 @@
+{
+  "seconds": 69,
+  "meta": {
+    "num_turns": 24,
+    "total_cost_usd": 0.01810952,
+    "model": "claude-haiku-5-5",
+    "is_error": false,
+    "subtype": "success"
+  },
+  "report": {
+    "reviewed_path": "force-app",
+    "files_reviewed": 8,
+    "findings": [
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 9,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Opportunity query is inside the loop over accounts, so each account runs one query. A batch of more than 100 accounts exceeds the 100 SOQL query limit per transaction.",
+        "fix": "Query Opportunities once for all account IDs before the loop, group the amounts by AccountId in a map, then loop over the accounts and look up each total in the map."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 19,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "update acc runs once per account. More than 150 accounts exceed the 150 DML statement limit per transaction.",
+        "fix": "Add each account to a list inside the loop and run one update on the list after the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 5,
+        "rule_id": "missing-sharing",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The class declaration has no sharing keyword, so the class does not enforce record sharing rules itself.",
+        "fix": "Declare the class as public with sharing class AccountService."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 9,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Opportunity query runs in system mode and ignores the running user's object and field permissions.",
+        "fix": "Add WITH USER_MODE to the query."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 25,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "getTopAccounts queries Account in system mode, so it returns fields the running user may not be allowed to see.",
+        "fix": "Add WITH USER_MODE before LIMIT, for example: ... ORDER BY AnnualRevenue DESC WITH USER_MODE LIMIT :howMany."
+      },
+      {
+        "file": "force-app/main/default/classes/AccountService.cls",
+        "line": 21,
+        "rule_id": "debug-statement",
+        "severity": "low",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "System.debug is left in production code. It is harmless but adds log noise.",
+        "fix": "Remove the System.debug line."
+      },
+      {
+        "file": "force-app/main/default/classes/CaseEscalationService.cls",
+        "line": 10,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "countOpenCases is called once per account inside the loop, and it runs a Case query (line 19) each time, so the query count grows with the number of accounts. The scanner did not flag this because the query is in a helper method.",
+        "fix": "Before the loop, run one aggregate query for all account IDs: SELECT AccountId, COUNT(Id) cnt FROM Case WHERE AccountId IN :accountIds AND IsClosed = false WITH USER_MODE GROUP BY AccountId. Put the counts in a map and check the map inside the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/ContactSearchController.cls",
+        "line": 14,
+        "rule_id": "soql-injection",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "searchTerm is joined into the query string (lines 11-12) and passed to Database.query. A user can type a single quote and add their own conditions to the WHERE clause. WITH USER_MODE and with sharing still apply, so the risk is altered filtering and errors rather than a sharing bypass.",
+        "fix": "Use a static query with a bind variable: String pattern = '%' + searchTerm + '%'; then results = [SELECT Id, FirstName, LastName, Email FROM Contact WHERE LastName LIKE :pattern WITH USER_MODE LIMIT 50];"
+      },
+      {
+        "file": "force-app/main/default/classes/ContactSearchController.cls",
+        "line": 15,
+        "rule_id": "empty-catch",
+        "severity": "low",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The QueryException is caught and the catch block is empty (line 16). Results stay null and the page shows nothing, with no message and no log.",
+        "fix": "Add a message to the page, for example ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Search failed. Try again.')), and log e.getMessage() if needed."
+      },
+      {
+        "file": "force-app/main/default/classes/InvoiceSyncService.cls",
+        "line": 19,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "Database.update(inv, false) runs once per invoice. More than 150 invoices exceed the DML statement limit per transaction.",
+        "fix": "Remove the update from the loop. Set the fields on each invoice, then call Database.update(invoices, false) once after the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/InvoiceSyncService.cls",
+        "line": 7,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The queue ID is hardcoded. The 00G prefix means a Group (queue) record. The ID exists only in one org, so the class breaks in sandboxes and after deployment to other orgs.",
+        "fix": "Look up the queue by DeveloperName, for example [SELECT Id FROM Group WHERE Type = 'Queue' AND DeveloperName = 'Finance' LIMIT 1], and cache the result in a variable."
+      },
+      {
+        "file": "force-app/main/default/triggers/OpportunityTrigger.trigger",
+        "line": 6,
+        "rule_id": "trigger-not-bulkified",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "Only Trigger.new[0] is read. When 200 opportunities are saved together, the other 199 never get the record type.",
+        "fix": "Loop over every record: for (Opportunity opp : Trigger.new) { if (opp.Amount != null && opp.Amount > 500000) { opp.RecordTypeId = ...; } }"
+      },
+      {
+        "file": "force-app/main/default/triggers/OpportunityTrigger.trigger",
+        "line": 8,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The record type ID is hardcoded. Record type IDs differ between orgs, so this value is wrong in every org except the one it came from.",
+        "fix": "Get the ID by developer name: Schema.SObjectType.Opportunity.getRecordTypeInfosByDeveloperName().get('Partner').getRecordTypeId(). Confirm the developer name 'Partner' in the target org."
+      }
+    ],
+    "notes": [
+      "InvoiceSyncService.cls: Database.update(inv, false) ignores the returned SaveResult list. Failed invoices are skipped without any record, and they stay Sync_Status__c = 'Queued'. No rule covers this. Check the results and log or report the failures.",
+      "InvoiceSyncService.cls: the query uses WITH USER_MODE, but the update does not. DML runs in system mode unless it uses 'as user' or AccessLevel.USER_MODE, so the update does not check the user's object or field permissions.",
+      "ContactSearchController.cls: % and _ in searchTerm are not escaped, so users can still widen the LIKE match after the bind-variable fix. Escape them if the search must match exact text.",
+      "OpportunityTrigger.trigger: the logic sits directly in the trigger body. A trigger handler class would make it easier to test and to extend.",
+      "AccountServiceTest.cls was scanned but not read. Test classes are not checked against the rules, and the scan found nothing.",
+      "CaseEscalationService.cls was read in full and has no scanner findings. The review finding above is the only issue. ContactTrigger.trigger and LeadConversionService.cls were read in full and have no findings."
+    ]
+  }
+}

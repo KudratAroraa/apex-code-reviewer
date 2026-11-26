@@ -1,0 +1,12 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "apex-code-reviewer",
+  "version": "0.2.0",
+  "description": "Reviews Salesforce Apex code for governor limit, security and quality problems, with exact line numbers, explanations and suggested fixes.",
+  "author": {
+    "name": "Kudrat Arora",
+    "email": "171818686+KudratAroraa@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "keywords": ["salesforce", "apex", "code-review", "governor-limits", "security"]
+}

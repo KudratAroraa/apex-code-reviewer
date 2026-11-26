@@ -1,0 +1,32 @@
+{
+  "name": "apex-code-reviewer",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Claude Code plugin that reviews Salesforce Apex code for governor limit, security and quality problems",
+  "author": "Kudrat Arora",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KudratAroraa/apex-code-reviewer"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && esbuild src/server.ts --bundle --platform=node --format=esm --target=node20 --minify --outfile=dist/server.js --banner:js=\"// Bundled MCP server for the Apex Code Reviewer plugin. Built from src/ with npm run build.\"",
+    "docs": "node scripts/build-rules-reference.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "scan": "node dist/server.js --scan",
+    "eval": "node scripts/run-eval.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "5.1.0"
+  }
+}

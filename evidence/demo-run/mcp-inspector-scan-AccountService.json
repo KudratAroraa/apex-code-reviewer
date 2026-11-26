@@ -1,0 +1,49 @@
+{
+  "path": "samples/force-app/main/default/classes/AccountService.cls",
+  "is_test": false,
+  "findings": [
+    {
+      "rule_id": "soql-in-loop",
+      "severity": "high",
+      "line": 9,
+      "snippet": "List<Opportunity> opps = [",
+      "message": "Database query runs once per loop iteration."
+    },
+    {
+      "rule_id": "dml-in-loop",
+      "severity": "high",
+      "line": 19,
+      "snippet": "update acc;",
+      "message": "Records are saved once per loop iteration."
+    },
+    {
+      "rule_id": "missing-sharing",
+      "severity": "medium",
+      "line": 5,
+      "snippet": "public class AccountService {",
+      "message": "No sharing keyword on the class declaration."
+    },
+    {
+      "rule_id": "soql-without-user-mode",
+      "severity": "medium",
+      "line": 9,
+      "snippet": "List<Opportunity> opps = [",
+      "message": "Query runs in system mode without a permission check."
+    },
+    {
+      "rule_id": "soql-without-user-mode",
+      "severity": "medium",
+      "line": 25,
+      "snippet": "return [SELECT Id, Name, AnnualRevenue FROM Account ORDER BY AnnualRevenue DESC LIMIT :howMany];",
+      "message": "Query runs in system mode without a permission check."
+    },
+    {
+      "rule_id": "debug-statement",
+      "severity": "low",
+      "line": 21,
+      "snippet": "System.debug('Ratings updated for ' + accounts.size() + ' accounts');",
+      "message": "System.debug call."
+    }
+  ],
+  "count": 6
+}

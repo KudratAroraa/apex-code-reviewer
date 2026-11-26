@@ -1,0 +1,44 @@
+[
+  {
+    "run": 1,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 22,
+    "seconds": 64,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "-"
+  },
+  {
+    "run": 2,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 22,
+    "seconds": 62,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "-"
+  },
+  {
+    "run": 3,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 24,
+    "seconds": 63,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "-"
+  }
+]

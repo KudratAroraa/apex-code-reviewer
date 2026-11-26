@@ -1,0 +1,160 @@
+{
+  "seconds": 98,
+  "meta": {
+    "num_turns": 10,
+    "total_cost_usd": 0.02,
+    "model": "claude-haiku-5-5"
+  },
+  "report": {
+    "reviewed_path": "force-app",
+    "files_reviewed": 6,
+    "findings": [
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 14,
+        "rule_id": "soql-injection",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "The keyword parameter from the @AuraEnabled search() method is concatenated directly into a dynamic SOQL LIKE literal with no escaping. A keyword containing a single quote ends the literal, so a caller who can reach this endpoint can append arbitrary SOQL clauses and read records or fields the intended query would not return.",
+        "fix": "Bind the value instead of concatenating it. Build the query with a bind such as 'AND Name LIKE :pattern' and pass binds {'pattern' => '%' + keyword + '%'} to Database.queryWithBinds(soql, binds, AccessLevel.USER_MODE). Keep the sortField allowlist, because ORDER BY cannot take a bind variable."
+      },
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 17,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "search() calls Database.query(soql) with no AccessLevel, so object and field permissions are not enforced. The with sharing keyword only covers record sharing, so this method returns Product2 fields to users who lack FLS on them.",
+        "fix": "Use Database.queryWithBinds(soql, binds, AccessLevel.USER_MODE), the same pattern byFamily() already uses. This fix goes together with the soql-injection fix on line 14."
+      },
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 33,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "getDetails() runs an inline SOQL query with no WITH USER_MODE clause, so Description and Family are returned without object or field permission checks.",
+        "fix": "Add WITH USER_MODE to the query: [SELECT Id, Name, Description, Family FROM Product2 WHERE Id = :productId WITH USER_MODE]."
+      },
+      {
+        "file": "force-app/main/default/classes/QuoteTriggerHandler.cls",
+        "line": 10,
+        "rule_id": "trigger-not-bulkified",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "beforeInsert() reads only newQuotes[0]. When several quotes are inserted in one transaction (API, Data Loader, or a bulk insert), only the first quote gets the partner discount and the rest are silently skipped.",
+        "fix": "Loop over every quote: for (Quote q : newQuotes) { if (q.Partner_Deal__c == true) { q.Discount = PARTNER_DISCOUNT; } }."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 10,
+        "rule_id": "hardcoded-id",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "OWNER_BY_REGION hardcodes two 18-character User IDs (lines 10 and 11). These IDs exist only in one org and will not match in other orgs or refreshed sandboxes. The batch uses them to reassign ownership of every matching account, so changing an owner requires a code deployment.",
+        "fix": "Move the region-to-owner mapping into Custom Metadata or a Custom Setting. Resolve the users at runtime, for example by Username, and load the map once per transaction."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 15,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "start() builds the account query string without WITH USER_MODE. The batch reads Id, BillingPostalCode and OwnerId, then reassigns OwnerId, without enforcing object or field permissions.",
+        "fix": "Append WITH USER_MODE to the query string: 'SELECT Id, BillingPostalCode, OwnerId FROM Account WHERE BillingPostalCode != null WITH USER_MODE'. Also change the DML at line 44 to 'update as user acc;' and confirm that the scheduled running user has the Account access it needs."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 30,
+        "rule_id": "debug-statement",
+        "severity": "low",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "finish() writes a System.debug statement to production debug logs. The rule applies because the class is not a test class.",
+        "fix": "Remove the statement. If the count is needed, write it to a status record, publish a Platform Event, or send it by email."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 44,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "assignOwner() runs 'update acc;' once per account, and execute() calls it for every record in the scope (200 by default). Any chunk with more than 150 changed accounts exceeds the 150 DML-statement limit, and the whole chunk fails.",
+        "fix": "In execute(), collect the changed accounts in a List<Account> and run one 'update as user toChange;' after the loop. Use Database.update(list, false) if partial success is wanted, and increment processed from the successful results."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 59,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "tryReserve() runs a SOQL query for each order item. reserveStock() calls it from the nested loop over orders and items (lines 31-38), so one run issues one query per item, plus up to two retries each. A run with about 100 items exceeds the 100 synchronous SOQL limit. The retry loop repeats an identical query with no state change, so a retry cannot succeed where the first attempt failed.",
+        "fix": "Before the loop, query all Stock_Level__c rows for the product IDs in one statement and build a Map<Id, Stock_Level__c> keyed by Product__c. Reserve against that map in memory, and remove the pointless retry loop."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 70,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "tryReserve() runs 'update as user level;' for each order item inside the loop at lines 31-38. A run with more than 150 items exceeds the DML-statement limit.",
+        "fix": "Collect the changed Stock_Level__c records in a list during the loop and run one 'update as user' after it. Make this change together with the SOQL fix on line 59."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 80,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "notifyOwners() queries Account once per distinct account inside a for loop. Each batch of orders pays one query per account, which counts against the 100-query limit.",
+        "fix": "Query once before the loop: [SELECT Id, OwnerId FROM Account WHERE Id IN :accountIds WITH USER_MODE], then build a Map<Id, Account> and look up the owner inside the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 87,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "notifyOwners() runs 'insert t;' once per account inside the loop. Orders spread across many accounts will exceed the 150 DML-statement limit.",
+        "fix": "Collect the Task records in a List<Task> and run a single 'insert as user tasks;' after the loop, matching the rest of the class."
+      },
+      {
+        "file": "force-app/main/default/classes/LegacyInvoiceImporter.cls",
+        "line": 54,
+        "rule_id": "soql-injection",
+        "severity": "medium",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "describeSource() concatenates tableName into a SOQL FROM clause after String.escapeSingleQuotes. That function only escapes quotes inside string literals and does not validate identifiers, so an input such as 'Account WHERE Id != null' changes the structure of the query. The method is public and runs without sharing, so a caller who passes untrusted input can count records in objects or with filters it should not see. No caller exists in force-app, so reachability is unverified.",
+        "fix": "Check tableName against Schema.getGlobalDescribe().containsKey(...) or an explicit allowlist, and reject anything else before building the query. Do not rely on escapeSingleQuotes for identifiers."
+      }
+    ],
+    "notes": [
+      "Scope: all six Apex files under force-app/main/default (five classes and one trigger). No @isTest classes exist in force-app, so the test-class exclusions for soql-without-user-mode and debug-statement were not applied to anything.",
+      "Only the nine listed rule IDs were used. Other defects found while reading are listed below as notes, not findings.",
+      "LegacyInvoiceImporter.cls: 'without sharing' (line 6) is explicit, documented in the class comment, and says it was approved by the security review. Not reported as missing-sharing.",
+      "LegacyInvoiceImporter.cls: the query at line 20 uses WITH SYSTEM_MODE, an explicit choice, so it is not reported as soql-without-user-mode.",
+      "LegacyInvoiceImporter.cls: 'a00INV2024Q4001' (line 11) is 15 characters and could look like a record ID, but the comment says it is a legacy reference prefix, not an ID. Not reported as hardcoded-id.",
+      "LegacyInvoiceImporter.cls: describeSource() (lines 55-59) has an empty catch block for QueryException. The comment explains the intent, and the method returns 'Rows: unknown' afterwards, so it is not reported as empty-catch. It still gives no log or signal of which error occurred.",
+      "LegacyInvoiceImporter.cls, not a listed rule: String.escapeSingleQuotes on line 16 is applied to values that are bound with :accountNumbers. Bind variables do not need escaping, and escaping changes the value, so account numbers containing a quote will not match. Decimal.valueOf (line 38) throws on bad input and aborts the whole batch.",
+      "OrderFulfilmentService.cls, not a listed rule: tryReserve() (line 59) throws a QueryException when no Stock_Level__c row exists for the product, because a single-row SELECT without a match is an exception. The FulfilmentException path is never reached for that case.",
+      "OrderFulfilmentService.cls, not a listed rule: notifyOwners() keys its map by AccountId, so only one Task is created per account even when several orders belong to the same account.",
+      "QuoteTriggerHandler.cls, not a listed rule: afterUpdate() builds Opportunity records from q.OpportunityId without a null check. A quote with no opportunity makes the whole update fail.",
+      "TerritoryAssignmentBatch.cls, not a listed rule: regionFor() calls Integer.valueOf on the first character of BillingPostalCode. UK-style postcodes start with a letter, so this throws and fails the chunk.",
+      "QuoteTrigger.trigger: no findings. The trigger routes events to the handler and is bulk-safe; the bulkification defect is in QuoteTriggerHandler.cls.",
+      "ProductCatalogController.cls byFamily(): correct. It binds the family value and uses AccessLevel.USER_MODE, so it is the pattern the other methods should follow.",
+      "No file was modified. apex-review.json is the only file written."
+    ]
+  }
+}

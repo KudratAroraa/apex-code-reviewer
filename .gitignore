@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+*.tsbuildinfo
+# Review output when you run the plugin on this repo itself
+/apex-review.json
+/apex-review.md
+.claude/

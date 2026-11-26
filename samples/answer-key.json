@@ -1,0 +1,23 @@
+{
+  "description": "Known problems planted in samples/force-app. 'scanner' issues are found by the rules. The 'review' issue can only be found by reading the code: the query is in a helper method that is called from inside a loop. 'clean_files' must have no findings.",
+  "issues": [
+    { "file": "classes/AccountService.cls", "rule_id": "missing-sharing", "lines": [5], "found_by": "scanner" },
+    { "file": "classes/AccountService.cls", "rule_id": "soql-in-loop", "lines": [9], "found_by": "scanner" },
+    { "file": "classes/AccountService.cls", "rule_id": "soql-without-user-mode", "lines": [9], "found_by": "scanner" },
+    { "file": "classes/AccountService.cls", "rule_id": "dml-in-loop", "lines": [19], "found_by": "scanner" },
+    { "file": "classes/AccountService.cls", "rule_id": "debug-statement", "lines": [21], "found_by": "scanner" },
+    { "file": "classes/AccountService.cls", "rule_id": "soql-without-user-mode", "lines": [25], "found_by": "scanner" },
+    { "file": "classes/ContactSearchController.cls", "rule_id": "soql-injection", "lines": [11, 12, 14], "found_by": "scanner" },
+    { "file": "classes/ContactSearchController.cls", "rule_id": "empty-catch", "lines": [15, 16], "found_by": "scanner" },
+    { "file": "classes/InvoiceSyncService.cls", "rule_id": "hardcoded-id", "lines": [7], "found_by": "scanner" },
+    { "file": "classes/InvoiceSyncService.cls", "rule_id": "dml-in-loop", "lines": [19], "found_by": "scanner" },
+    { "file": "triggers/OpportunityTrigger.trigger", "rule_id": "trigger-not-bulkified", "lines": [6], "found_by": "scanner" },
+    { "file": "triggers/OpportunityTrigger.trigger", "rule_id": "hardcoded-id", "lines": [8], "found_by": "scanner" },
+    { "file": "classes/CaseEscalationService.cls", "rule_id": "soql-in-loop", "lines": [10, 19], "found_by": "review" }
+  ],
+  "clean_files": [
+    "classes/LeadConversionService.cls",
+    "classes/AccountServiceTest.cls",
+    "triggers/ContactTrigger.trigger"
+  ]
+}

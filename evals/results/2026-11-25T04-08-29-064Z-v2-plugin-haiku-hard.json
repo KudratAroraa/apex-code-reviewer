@@ -1,0 +1,47 @@
+[
+  {
+    "run": 1,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "8/8",
+    "hidden_issues": "5/5",
+    "false_positives": 0,
+    "decoys_wrongly_confirmed": "0/1",
+    "clean_file_findings": 0,
+    "turns": 18,
+    "seconds": 155,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "-"
+  },
+  {
+    "run": 2,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "8/8",
+    "hidden_issues": "5/5",
+    "false_positives": 1,
+    "decoys_wrongly_confirmed": "0/1",
+    "clean_file_findings": 0,
+    "turns": 18,
+    "seconds": 103,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "LegacyInvoiceImporter.cls:56 soql-without-user-mode"
+  },
+  {
+    "run": 3,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "8/8",
+    "hidden_issues": "5/5",
+    "false_positives": 0,
+    "decoys_wrongly_confirmed": "0/1",
+    "clean_file_findings": 0,
+    "turns": 20,
+    "seconds": 106,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "-"
+  }
+]

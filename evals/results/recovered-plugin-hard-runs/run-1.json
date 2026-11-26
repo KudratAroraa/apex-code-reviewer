@@ -1,0 +1,175 @@
+{
+  "seconds": 122,
+  "meta": {
+    "num_turns": 19,
+    "total_cost_usd": 0.54,
+    "model": "claude-opus-5-5"
+  },
+  "report": {
+    "reviewed_path": "force-app",
+    "files_reviewed": 6,
+    "findings": [
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 80,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The Account query runs once per distinct account in notifyOwners, so orders for more than 100 accounts exceed the SOQL limit.",
+        "fix": "Query all accounts once with WHERE Id IN :byAccount.keySet() before the loop and read OwnerId from the resulting map."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 87,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "insert t runs once per account, so orders for more than 150 accounts exceed the DML limit.",
+        "fix": "Add each Task to a List<Task> and run one insert as user after the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 37,
+        "rule_id": "soql-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "reserveStock is called for every order item and calls tryReserve, which queries Stock_Level__c (line 59) up to 3 times per item. More than 33 order items in one call can exceed 100 queries.",
+        "fix": "Collect all Product2Ids first, query Stock_Level__c once into a Map<Id, Stock_Level__c>, and reserve stock against the map in memory."
+      },
+      {
+        "file": "force-app/main/default/classes/OrderFulfilmentService.cls",
+        "line": 37,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "reserveStock calls tryReserve, which runs update as user level (line 70) once per order item, so more than 150 items exceed the DML limit.",
+        "fix": "Decrement Available__c on the in-memory stock records and run one update as user on the changed records after the loop."
+      },
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 17,
+        "rule_id": "soql-injection",
+        "severity": "high",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "keyword from the Lightning client is concatenated into the LIKE clause on line 14 with no escaping or binding, so a crafted keyword can change the query. sortField is safe because it is checked against an allowlist.",
+        "fix": "Bind the keyword: build '%' + keyword + '%' into a variable and use Database.queryWithBinds with WHERE Name LIKE :pattern and AccessLevel.USER_MODE."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 24,
+        "rule_id": "dml-in-loop",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "assignOwner is called for every account in the scope and runs update acc (line 44) each time. With the default scope of 200, a chunk where more than 150 accounts change owner exceeds the DML limit.",
+        "fix": "Have assignOwner only set OwnerId and add the account to a list, then run one update after the loop in execute."
+      },
+      {
+        "file": "force-app/main/default/classes/QuoteTriggerHandler.cls",
+        "line": 10,
+        "rule_id": "trigger-not-bulkified",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "beforeInsert only reads newQuotes[0], so when quotes are inserted in bulk (data loader, API, list insert) only the first quote gets the partner discount.",
+        "fix": "Loop over newQuotes and apply the discount to every quote where Partner_Deal__c is true."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 10,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The NORTH territory owner's User ID is written into the code. User IDs differ between sandboxes and production, so the batch assigns the wrong or a non-existent owner after deployment.",
+        "fix": "Store the region-to-owner mapping in Custom Metadata (for example Territory_Owner__mdt with a username or Id field) and look it up at runtime."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 11,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "The SOUTH territory owner's User ID is written into the code and will not match between orgs.",
+        "fix": "Move the mapping to Custom Metadata together with the NORTH entry."
+      },
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 33,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "getDetails is @AuraEnabled and returns Description and Family without checking field-level security. with sharing enforces record access, not field access, so users can read fields hidden from their profile.",
+        "fix": "Add WITH USER_MODE to the query."
+      },
+      {
+        "file": "force-app/main/default/classes/ProductCatalogController.cls",
+        "line": 17,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "The search query from an @AuraEnabled method runs with Database.query in system mode, so object and field permissions on Product2 are not enforced. byFamily in the same class already uses AccessLevel.USER_MODE.",
+        "fix": "Use Database.queryWithBinds(soql, binds, AccessLevel.USER_MODE), which also fixes the injection finding."
+      },
+      {
+        "file": "force-app/main/default/classes/TerritoryAssignmentBatch.cls",
+        "line": 30,
+        "rule_id": "debug-statement",
+        "severity": "low",
+        "source": "scanner",
+        "status": "confirmed",
+        "explanation": "System.debug in finish is only visible when debug logs are enabled, so the processed count is effectively lost in production.",
+        "fix": "Remove it, or record the result somewhere persistent (for example a log record or an email to the admin) if the count is needed."
+      },
+      {
+        "file": "force-app/main/default/classes/LegacyInvoiceImporter.cls",
+        "line": 11,
+        "rule_id": "hardcoded-id",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "dismissed",
+        "explanation": "Dismissed: 'a00INV2024Q4001' is a legacy finance system reference prefix used to build Legacy_Reference__c (line 37), not a Salesforce record ID. It just happens to be 15 characters long.",
+        "fix": ""
+      },
+      {
+        "file": "force-app/main/default/classes/LegacyInvoiceImporter.cls",
+        "line": 20,
+        "rule_id": "soql-without-user-mode",
+        "severity": "medium",
+        "source": "scanner",
+        "status": "dismissed",
+        "explanation": "Dismissed: the query explicitly declares WITH SYSTEM_MODE in a without sharing class that the comment on lines 7-8 documents as an approved one-off migration run by the integration user, which must see every account.",
+        "fix": ""
+      },
+      {
+        "file": "force-app/main/default/classes/LegacyInvoiceImporter.cls",
+        "line": 54,
+        "rule_id": "soql-injection",
+        "severity": "high",
+        "source": "review",
+        "status": "confirmed",
+        "explanation": "describeSource concatenates tableName into the FROM clause. String.escapeSingleQuotes only protects values inside quotes, not identifiers, so a caller can pass any object name or extra clauses (for example 'Opportunity WHERE Amount > 1000000'). The query runs in system mode in a without sharing class, so it reveals record counts the caller should not see. Impact is limited to counts, but the protection used does not work.",
+        "fix": "Validate the name against the schema instead of escaping it: check Schema.getGlobalDescribe().containsKey(tableName) (or an allowlist of the expected staging objects) and reject anything else."
+      }
+    ],
+    "notes": [
+      "LegacyInvoiceImporter.cls line 16: String.escapeSingleQuotes is applied to account numbers that are used as bind variables. Binding is already safe, and escaping changes the value: an account number containing an apostrophe would be stored as \\' in the set, so it would not match in the query and the lookup on line 31 (which uses the raw value) would also miss it. Remove the escape.",
+      "LegacyInvoiceImporter.cls lines 57-59: the catch block contains only a comment, but this is deliberate. The method falls through to return 'Rows: unknown', so the error is handled, not silently swallowed. Not reported as empty-catch.",
+      "LegacyInvoiceImporter.cls line 42: Database.insert(invoices, false) discards the failed SaveResults. Consider logging the errors so the migration team can see which invoices did not import.",
+      "OrderFulfilmentService.cls lines 49-52: the 3-attempt retry in reserveStock re-reads the same data in the same transaction, so a retry can never succeed where the first attempt failed. It only multiplies the query count.",
+      "OrderFulfilmentService.cls line 59: assigning the query result to a single Stock_Level__c throws a QueryException when a product has no stock record. Handle the missing case explicitly.",
+      "OrderFulfilmentService.cls lines 75-78: byAccount keeps only the last order per account, so when an account has several orders only one gets a Task. Orders with a null AccountId also add a null key. Also, insert t on line 87 runs in system mode while the rest of the class uses insert as user.",
+      "OrderFulfilmentService.cls: stock is reserved before shipments are inserted and owners notified. If a later item fails with FulfilmentException the whole transaction rolls back, which is correct, but callers should expect that exception.",
+      "TerritoryAssignmentBatch.cls line 37: Integer.valueOf(postcode.left(1)) throws a TypeException for postcodes starting with a letter (for example UK or Canadian postcodes), which fails the whole batch chunk. Check postcode.left(1).isNumeric() first.",
+      "TerritoryAssignmentBatch.cls line 5: the class is with sharing, so a nightly batch only reassigns accounts the running user can see. If it is meant to cover every account, confirm the running user or switch to an explicit, documented without sharing / inherited sharing choice. The start query runs in system mode, which is expected for this kind of batch."
+    ]
+  }
+}

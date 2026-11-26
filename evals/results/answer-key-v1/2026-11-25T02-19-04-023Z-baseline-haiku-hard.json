@@ -1,0 +1,47 @@
+[
+  {
+    "run": 1,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "6/7",
+    "hidden_issues": "4/4",
+    "false_positives": 3,
+    "decoys_wrongly_confirmed": "0/2",
+    "clean_file_findings": 2,
+    "turns": 13,
+    "seconds": 86,
+    "api_equivalent_usd": "0.02",
+    "missed": "TerritoryAssignmentBatch.cls hardcoded-id",
+    "extras": "LegacyInvoiceImporter.cls:54 soql-injection, LegacyInvoiceImporter.cls:57 empty-catch, ProductCatalogController.cls:17 soql-without-user-mode"
+  },
+  {
+    "run": 2,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "6/7",
+    "hidden_issues": "4/4",
+    "false_positives": 3,
+    "decoys_wrongly_confirmed": "0/2",
+    "clean_file_findings": 1,
+    "turns": 10,
+    "seconds": 98,
+    "api_equivalent_usd": "0.02",
+    "missed": "TerritoryAssignmentBatch.cls hardcoded-id",
+    "extras": "ProductCatalogController.cls:17 soql-without-user-mode, TerritoryAssignmentBatch.cls:15 soql-without-user-mode, LegacyInvoiceImporter.cls:54 soql-injection"
+  },
+  {
+    "run": 3,
+    "model": "claude-haiku-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "7/7",
+    "hidden_issues": "4/4",
+    "false_positives": 4,
+    "decoys_wrongly_confirmed": "0/2",
+    "clean_file_findings": 2,
+    "turns": 12,
+    "seconds": 103,
+    "api_equivalent_usd": "0.02",
+    "missed": "-",
+    "extras": "LegacyInvoiceImporter.cls:54 soql-injection, LegacyInvoiceImporter.cls:57 empty-catch, ProductCatalogController.cls:17 soql-without-user-mode, TerritoryAssignmentBatch.cls:16 soql-without-user-mode"
+  }
+]

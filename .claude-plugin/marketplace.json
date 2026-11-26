@@ -1,0 +1,14 @@
+{
+  "name": "apex-code-reviewer",
+  "description": "Claude Code plugin for reviewing Salesforce Apex code.",
+  "owner": {
+    "name": "Kudrat Arora"
+  },
+  "plugins": [
+    {
+      "name": "apex-code-reviewer",
+      "source": "./",
+      "description": "Reviews Salesforce Apex code for governor limit, security and quality problems, with exact line numbers, explanations and suggested fixes."
+    }
+  ]
+}

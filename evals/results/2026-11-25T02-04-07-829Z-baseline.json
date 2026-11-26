@@ -1,0 +1,44 @@
+[
+  {
+    "run": 1,
+    "model": "claude-opus-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 12,
+    "seconds": 52,
+    "api_equivalent_usd": "0.29",
+    "missed": "-",
+    "extras": "-"
+  },
+  {
+    "run": 2,
+    "model": "claude-opus-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 13,
+    "seconds": 58,
+    "api_equivalent_usd": "0.30",
+    "missed": "-",
+    "extras": "-"
+  },
+  {
+    "run": 3,
+    "model": "claude-opus-5-5",
+    "valid_report": "yes",
+    "scanner_issues": "12/12",
+    "hidden_issue": "1/1",
+    "false_positives": 0,
+    "clean_file_findings": 0,
+    "turns": 12,
+    "seconds": 65,
+    "api_equivalent_usd": "0.29",
+    "missed": "-",
+    "extras": "-"
+  }
+]
