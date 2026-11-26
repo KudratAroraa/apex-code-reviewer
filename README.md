@@ -20,7 +20,7 @@ Tested rules find the exact problems with line numbers. Claude then reads the co
 | **Working agentic AI prototype** using Anthropic Claude | [How it works](#how-it-works), [A review in Claude Code](#a-review-in-claude-code) |
 | **Testing** with recorded results | [Testing](#testing): 44 unit tests, two sample projects with answer keys, evals with and without the plugin on two Claude models |
 | **Technical documentation** | This README: [architecture](#how-it-works), [how the scanner reads Apex](#how-the-scanner-reads-apex), [MCP tool reference](#mcp-tool-reference), [install](#install), [troubleshooting](#troubleshooting), [adding a rule](#adding-a-rule) and [version history](#version-history). Also the rules reference in `skills/apex-review/references/rules.md` and the eval index in `evals/results/README.md` |
-| **Evidence** | 26 screenshots in `evidence/screenshots/` and the output of a live review in `evidence/demo-run/` |
+| **Evidence** | 34 screenshots in `evidence/screenshots/` and the output of a live review in `evidence/demo-run/` |
 
 ## Why I built it
 
@@ -164,6 +164,12 @@ You need [Claude Code](https://claude.com/claude-code) and Node.js 20 or newer.
 /plugin install apex-code-reviewer@apex-code-reviewer
 ```
 
+I tested this install from GitHub in a fresh Salesforce project. The plugin installed, its MCP server connected with all three tools, and a full review ran straight away.
+
+| | |
+|---|---|
+| ![Installed from GitHub](evidence/screenshots/28-install-plugin-installed-active.png) | ![MCP server connected after install](evidence/screenshots/29-install-mcp-server-connected.png) |
+
 Then, in any Salesforce project:
 
 ```
@@ -277,7 +283,7 @@ What the results show:
 
 ## Evidence
 
-All 26 screenshots are in [evidence/screenshots/](evidence/screenshots/).
+All 34 screenshots are in [evidence/screenshots/](evidence/screenshots/).
 
 | Screenshots | What they show |
 |---|---|
@@ -287,6 +293,8 @@ All 26 screenshots are in [evidence/screenshots/](evidence/screenshots/).
 | 14 to 17 | The review report Claude wrote |
 | 18 to 20 | Eval runs with and without the plugin, and the results table |
 | 21 to 26 | The MCP server tested on its own in the MCP Inspector |
+| 27 to 33 | The plugin installed from GitHub in a fresh project, then a full review |
+| 34 | The public GitHub repository |
 
 ## Project structure
 
